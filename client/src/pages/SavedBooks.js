@@ -19,7 +19,7 @@ const SavedBooks = () => {
     );
   };
 
-  const handleDeleteBook = async (BookId) => {
+  const handleDeleteBook = async (bookId) => {
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
     if (!token) {

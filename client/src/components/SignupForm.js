@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
+import { useMutation } from '@apollo/react-hooks';
 import { Form, Button, Alert } from 'react-bootstrap';
 
-import { createUser } from '../utils/API';
-import { useMutation } from '@apollo/react-hooks';
 import Auth from '../utils/auth';
+import { ADD_USER } from '../utils/mutations';
 
 const SignupForm = () => {
-
-const [addUser] = useMutation(ADD_USER);
-
   // set initial form state
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '' });
   // set state for form validation
   const [validated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
+
+  const[addUser] = useMutation(ADD_USER);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -24,17 +23,20 @@ const [addUser] = useMutation(ADD_USER);
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    try {
-      const{data} = await addUser({
-        variables: {...userFormData},
-      });
-
-      Auth.login(data.addUser.token);
+        // use try/catch instead of promises to handle errors
+      try {
+        // execute addUser mutation and pass in variable data from form
+        const { data } = await addUser({
+          variables: { ...userFormData}
+        });
+  
+        Auth.login(data.addUser.token)
+  
+      } catch (e) {
+        console.error(e);
+        setShowAlert(true);
+      }
     
-    } catch (err) {
-      console.error(err);
-      setShowAlert(true);
-    }
 
     setUserFormData({
       username: '',
@@ -45,10 +47,13 @@ const [addUser] = useMutation(ADD_USER);
 
   return (
     <>
+      {/* This is needed for the validation functionality above */}
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
+        {/* show alert if server response is bad */}
         <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
           Something went wrong with your signup!
         </Alert>
+
         <Form.Group>
           <Form.Label htmlFor='username'>Username</Form.Label>
           <Form.Control
@@ -59,20 +64,20 @@ const [addUser] = useMutation(ADD_USER);
             value={userFormData.username}
             required
           />
-          <Form.Group.Feedback type='invlaid'>Username is required</Form.Group.Feedback>
+          <Form.Control.Feedback type='invalid'>Username is required!</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group>
-          <Form.Label hmtlFor='email'>Email</Form.Label>
+          <Form.Label htmlFor='email'>Email</Form.Label>
           <Form.Control
             type='email'
-            placeholder='Your email'
+            placeholder='Your email address'
             name='email'
-            onChange={handleInputCHange}
+            onChange={handleInputChange}
             value={userFormData.email}
             required
           />
-          <Form.Control.Feedback type='invlaid'>Email is Required</Form.Control.Feedback>
+          <Form.Control.Feedback type='invalid'>Email is required!</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group>
@@ -93,10 +98,10 @@ const [addUser] = useMutation(ADD_USER);
           variant='success'>
           Submit
         </Button>
+        {/* {error && <div>Sign up failed</div>} */}
       </Form>
     </>
   );
 };
-
 
 export default SignupForm;
